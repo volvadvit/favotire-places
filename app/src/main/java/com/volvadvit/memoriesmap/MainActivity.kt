@@ -41,8 +41,8 @@ class MainActivity : AppCompatActivity() {
             if (listLocation.isNotEmpty()) {
                 intent.putExtra("Location", listLocation[it])
             } else {
+				intent.putExtra("Location", "emptyExtra")
                 Toast.makeText(this, "Location is empty", Toast.LENGTH_SHORT).show()
-                intent.putExtra("Location", "emptyExtra")
             }
             startActivity(intent)
         }
