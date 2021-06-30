@@ -41,12 +41,66 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
+        initLocalMng()
+    }
+
+    override fun onMapReady(googleMap: GoogleMap) {
+        mMap = googleMap
+        mMap.setOnMapLongClickListener(this)
+        mMap.mapType = GoogleMap.MAP_TYPE_TERRAIN
+
+        extrasHandler()
+    }
+
+    override fun onMapLongClick(p0: LatLng) {
+        val areaInfo = getAreaInfo(p0)
+        mMap.addMarker(
+            MarkerOptions()
+                .position(p0)
+                .title(areaInfo)
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
+        )
+        val location = "${p0.latitude}+${p0.longitude}"
+        MainActivity.timeStampMap[location] = getTimeStamp()
+
+        fillMainActivity(location, areaInfo)
+    }
+
+    private fun extrasHandler() {
+        val dataFromExtra = intent.getStringExtra("Location") ?: "emptyExtra"
+        if (dataFromExtra != "emptyExtra") {
+            val arrayLatLng: Array<String> = dataFromExtra.split("+").toTypedArray()
+            val location: LatLng = LatLng(arrayLatLng[0].toDouble(), arrayLatLng[1].toDouble())
+            mMap.addMarker(
+                MarkerOptions()
+                    .position(location)
+                    .title(MainActivity.timeStampMap[dataFromExtra])
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
+            )
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 15f))
+        } else {
+            if (MainActivity.checkPermission(applicationContext)) {
+                localManager.requestLocationUpdates(
+                    LocationManager.GPS_PROVIDER,
+                    0,
+                    0f,
+                    localListener
+                )
+            } else {
+                finish()
+            }
+        }
+    }
+
+    private fun initLocalMng() {
         localManager = this.getSystemService(LOCATION_SERVICE) as LocationManager
         localListener = object : LocationListener {
             override fun onLocationChanged(location: Location) {
-                if (checkPermission()) {
-                    val lastKnownLocation: Location = localManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)!!
-                    val locationLatLng = LatLng(lastKnownLocation.latitude, lastKnownLocation.longitude)
+                if (MainActivity.checkPermission(applicationContext)) {
+                    val lastKnownLocation: Location =
+                        localManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) ?: return
+                    val locationLatLng =
+                        LatLng(lastKnownLocation.latitude, lastKnownLocation.longitude)
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(locationLatLng, 15f))
                 }
             }
@@ -55,37 +109,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
             override fun onProviderDisabled(provider: String) {}
         }
     }
-
-    override fun onMapReady(googleMap: GoogleMap) {
-        mMap = googleMap
-        mMap.setOnMapLongClickListener(this)
-        mMap.mapType = GoogleMap.MAP_TYPE_SATELLITE
-
-        val dataFromExtra = intent.getStringExtra("Location")!!
-            if (dataFromExtra != "emptyExtra") {
-                val arrayLatLng: Array<String> = dataFromExtra.split("+").toTypedArray()
-                val location: LatLng = LatLng(arrayLatLng[0].toDouble(), arrayLatLng[1].toDouble())
-                    mMap.addMarker(
-                        MarkerOptions()
-                            .position(location)
-                            .title(MainActivity.timeStampMap["${location.latitude}+${location.longitude}"])
-                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
-                    )
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 15f))
-            } else {
-                if (checkPermission()) {
-                    localManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0f, localListener)
-                } else {
-                    finish()
-                }
-            }
-    }
-
-    private fun checkPermission() =
-        ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
 
     private fun getAreaInfo(location: LatLng): String {
         var address = ""
@@ -108,19 +131,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
                 }
         }
         return address
-    }
-
-    override fun onMapLongClick(p0: LatLng) {
-            mMap.addMarker(
-                MarkerOptions()
-                    .position(p0)
-                    .title(getAreaInfo(p0))
-                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
-            )
-            val location = "${p0.latitude}+${p0.longitude}"
-        MainActivity.timeStampMap[location] = getTimeStamp()
-
-        fillMainActivity(location, getAreaInfo(p0))
     }
 
     private fun fillMainActivity(location: String, area: String) {

@@ -36,6 +36,8 @@ android {
 }
 
 dependencies {
+    // MOSHI
+    implementation("com.squareup.moshi:moshi:1.12.0")
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation 'androidx.core:core-ktx:1.5.0'
