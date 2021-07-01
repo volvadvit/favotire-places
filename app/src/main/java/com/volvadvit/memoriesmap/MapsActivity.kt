@@ -7,7 +7,10 @@ import android.location.*
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import com.google.android.gms.maps.CameraUpdateFactory
 
@@ -64,6 +67,21 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
         MainActivity.timeStampMap[location] = getTimeStamp()
 
         fillMainActivity(location, areaInfo)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.map_menu, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        object : AlertDialog.Builder(this){}
+            .setIcon(android.R.drawable.ic_menu_help)
+            .setTitle("Help")
+            .setMessage("Long press on place to save it.\nYou can return on main page, and see all saved places.")
+            .setPositiveButton("Alright", null)
+            .show()
+        return super.onOptionsItemSelected(item)
     }
 
     private fun extrasHandler() {
