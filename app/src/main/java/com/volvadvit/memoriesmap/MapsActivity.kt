@@ -1,17 +1,13 @@
 package com.volvadvit.memoriesmap
 
-import android.Manifest
-import android.content.Intent
-import android.content.pm.PackageManager
+
 import android.location.*
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.core.content.ContextCompat
 import com.google.android.gms.maps.CameraUpdateFactory
 
 import com.google.android.gms.maps.GoogleMap
@@ -21,13 +17,11 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.volvadvit.memoriesmap.databinding.ActivityMapsBinding
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.UnsupportedTemporalTypeException
 import java.util.*
-import kotlin.concurrent.thread
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLongClickListener {
 
@@ -95,7 +89,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
                     .title(MainActivity.timeStampMap[dataFromExtra])
                     .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
             )
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 15f))
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 20f))
         } else {
             if (MainActivity.checkPermission(applicationContext)) {
                 localManager.requestLocationUpdates(
@@ -115,11 +109,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
         localListener = object : LocationListener {
             override fun onLocationChanged(location: Location) {
                 if (MainActivity.checkPermission(applicationContext)) {
-                    val lastKnownLocation: Location =
-                        localManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) ?: return
+//                    val lastKnownLocation: Location =
+//                        localManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) ?: return
                     val locationLatLng =
-                        LatLng(lastKnownLocation.latitude, lastKnownLocation.longitude)
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(locationLatLng, 15f))
+                        LatLng(location.latitude, location.longitude)
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(locationLatLng, 20f))
                 }
             }
             override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}

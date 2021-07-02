@@ -16,5 +16,5 @@
     string in this file.
     -->
 
-    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">getString(R.string.API_KEY)</string>
+    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">com.google.android.geo.API_KEY</string>
 </resources>

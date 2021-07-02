@@ -10,9 +10,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.Types
+
 import com.volvadvit.memoriesmap.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
