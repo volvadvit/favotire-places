@@ -6,8 +6,11 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 
@@ -25,9 +28,10 @@ class MainActivity : AppCompatActivity() {
                 context,
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
+
         internal var listAddress: MutableList<String> = mutableListOf()
         internal var listLocation: MutableList<String> = mutableListOf()
-        internal val timeStampMap = mutableMapOf<String, String>()
+        internal var timeStampMap = mutableMapOf<String, String>()  // Location to Timestamp
         internal lateinit var mAdapter: LocationAdapter
     }
 
@@ -43,7 +47,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        /** Save to List<>(listAddress, listLocation) */
         objectSerializer.saveData()
     }
 
@@ -60,17 +63,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initRecyclerAdapter() {
-        mAdapter = LocationAdapter(listAddress) {
-            // Recycler Listener
-            val intent = Intent(this, MapsActivity::class.java)
-            if (listLocation.isNotEmpty()) {
-                intent.putExtra("Location", listLocation[it])
-            } else {
-                intent.putExtra("Location", "emptyExtra")
-                Toast.makeText(this, "Location is empty", Toast.LENGTH_SHORT).show()
-            }
-            startActivity(intent)
-        }
+        mAdapter = LocationAdapter(listAddress)
         binding.recyclerView.adapter = mAdapter
     }
 
@@ -100,5 +93,26 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "You should give permission", Toast.LENGTH_SHORT).show()
             requestPermissions()
         }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.main_menu, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.main_menu_help -> {
+                object : AlertDialog.Builder(this) {}
+                    .setIcon(android.R.drawable.ic_menu_help)
+                    .setTitle("Help")
+                    .setMessage("Click \"Add location\" to open the map\n" +
+                            "Click on your already saved place, to see it\n" +
+                            "Long press to delete place from list")
+                    .setNeutralButton("Close", null)
+                    .show()
+            }
+        }
+        return super.onOptionsItemSelected(item)
     }
 }

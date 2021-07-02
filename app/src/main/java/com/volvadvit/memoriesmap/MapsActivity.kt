@@ -1,12 +1,15 @@
 package com.volvadvit.memoriesmap
 
 
+import android.content.Intent
 import android.location.*
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import com.google.android.gms.maps.CameraUpdateFactory
 
@@ -15,6 +18,7 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.volvadvit.memoriesmap.databinding.ActivityMapsBinding
 import java.time.LocalDateTime
@@ -29,8 +33,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
     private lateinit var binding: ActivityMapsBinding
     private lateinit var localManager : LocationManager
     private lateinit var localListener: LocationListener
+    private var markerInfo: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -38,14 +44,30 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
+        binding.browseButton.setOnClickListener {
+            val intent = Intent(this, WebViewActivity::class.java)
+            intent.putExtra("web", markerInfo)
+            startActivity(intent)
+        }
         initLocalMng()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        val objectSerializer = ObjectSerializer(this)
+        objectSerializer.saveData()
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
         mMap.setOnMapLongClickListener(this)
-        mMap.mapType = GoogleMap.MAP_TYPE_TERRAIN
-
+        mMap.mapType = GoogleMap.MAP_TYPE_NORMAL
+        mMap.setOnMarkerClickListener { marker ->
+            marker.showInfoWindow()
+            markerInfo = marker.title!!
+            binding.browseButton.visibility = View.VISIBLE
+            true
+        }
         extrasHandler()
     }
 
@@ -72,8 +94,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
         object : AlertDialog.Builder(this){}
             .setIcon(android.R.drawable.ic_menu_help)
             .setTitle("Help")
-            .setMessage("Long press on place to save it.\nYou can return on main page, and see all saved places.")
-            .setPositiveButton("Alright", null)
+            .setMessage("Long press on place to save it.\n" +
+                    "You can return on main page, and see all saved places\n" +
+                    "Click on marker and after on the \"Browse\" button, to google place")
+            .setNeutralButton("Close", null)
             .show()
         return super.onOptionsItemSelected(item)
     }
@@ -81,15 +105,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
     private fun extrasHandler() {
         val dataFromExtra = intent.getStringExtra("Location") ?: "emptyExtra"
         if (dataFromExtra != "emptyExtra") {
-            val arrayLatLng: Array<String> = dataFromExtra.split("+").toTypedArray()
-            val location: LatLng = LatLng(arrayLatLng[0].toDouble(), arrayLatLng[1].toDouble())
+            val locArray = MainActivity.listLocation[dataFromExtra.toInt()].split("+").toTypedArray()
+            val location: LatLng = LatLng(locArray[0].toDouble(), locArray[1].toDouble())
+            Toast.makeText(this, location.toString(), Toast.LENGTH_SHORT).show()
+
             mMap.addMarker(
                 MarkerOptions()
                     .position(location)
-                    .title(MainActivity.timeStampMap[dataFromExtra])
+                    .title(MainActivity.listAddress[dataFromExtra.toInt()])
                     .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
             )
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 20f))
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 15f))
         } else {
             if (MainActivity.checkPermission(applicationContext)) {
                 localManager.requestLocationUpdates(
@@ -113,7 +139,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
 //                        localManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) ?: return
                     val locationLatLng =
                         LatLng(location.latitude, location.longitude)
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(locationLatLng, 20f))
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(locationLatLng, 15f))
                 }
             }
             override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
@@ -131,17 +157,20 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
             )
 
             if (listAddresses.isNotEmpty()) {
+
                 if (!listAddresses[0].thoroughfare.isNullOrEmpty()) {
                     address = listAddresses[0].thoroughfare + " "
                 }
-                if (!listAddresses[0].locality.isNullOrEmpty()) {
-                    address += listAddresses[0].locality
-                } else {
-                    if (!listAddresses[0].adminArea.isNullOrEmpty()) {
-                        address += listAddresses[0].locality
-                    }
+                if (!listAddresses[0].subThoroughfare.isNullOrEmpty()) {
+                    address += listAddresses[0].subThoroughfare + " "
                 }
-        }
+                if (!listAddresses[0].subLocality.isNullOrEmpty()) {
+                    address += listAddresses[0].subLocality + " "
+                }
+                if (!listAddresses[0].adminArea.isNullOrEmpty()) {
+                    address += listAddresses[0].adminArea + " "
+                }
+            }
         return address
     }
 
