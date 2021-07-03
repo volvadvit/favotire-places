@@ -15,7 +15,7 @@
     android:layout_alignParentStart="true"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MapsActivity"/>
+    tools:context=".activity.MapsActivity"/>
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/browse_button"
@@ -23,12 +23,12 @@
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
-        android:background="@android:color/holo_blue_dark"
+        android:background="@color/purple_700"
         android:padding="8dp"
         android:text="Browse"
         android:layout_marginBottom="50dp"
         android:layout_marginEnd="20dp"
-        android:textColor="#000000"
+        android:textColor="#FFFFFF"
         android:visibility="invisible"/>
 
 </RelativeLayout>

@@ -20,7 +20,6 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         manifestPlaceholders = [googleMapApiKey: googleMapApiKey]
-//        resValue ("string", "MAP_KEY", googleMapApiKey)
     }
 
     buildTypes {

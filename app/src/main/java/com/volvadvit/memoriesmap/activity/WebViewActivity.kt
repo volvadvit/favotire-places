@@ -1,4 +1,4 @@
-package com.volvadvit.memoriesmap
+package com.volvadvit.memoriesmap.activity
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -17,7 +17,6 @@ class WebViewActivity : AppCompatActivity() {
 
         web.settings.javaScriptEnabled = true
         web.webViewClient = object : WebViewClient(){}
-        Toast.makeText(this, dataFromExtra, Toast.LENGTH_SHORT).show()
         web.loadUrl("https://www.google.com/search?q=${dataFromExtra}")
 
     }

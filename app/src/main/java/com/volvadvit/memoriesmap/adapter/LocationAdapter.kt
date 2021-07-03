@@ -1,6 +1,7 @@
-package com.volvadvit.memoriesmap
+package com.volvadvit.memoriesmap.adapter
 
 import android.content.Intent
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,6 +9,10 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
+import com.volvadvit.memoriesmap.activity.MainActivity
+import com.volvadvit.memoriesmap.activity.MapsActivity
+import com.volvadvit.memoriesmap.common.ObjectSerializer
+import com.volvadvit.memoriesmap.R
 
 class LocationAdapter(private val list: MutableList<String>):
     RecyclerView.Adapter<LocationAdapter.LocationViewHolder>(){
@@ -18,10 +23,10 @@ class LocationAdapter(private val list: MutableList<String>):
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
         LocationViewHolder(
-            LayoutInflater.from(parent.context).inflate(R.layout.item_list, parent, false))
+            LayoutInflater.from(parent.context).inflate(R.layout.item_location, parent, false))
 
     override fun onBindViewHolder(holder: LocationViewHolder, position: Int) {
-        holder.textLocation.text = list[position] + " " + MainActivity.timeStampMap.get(MainActivity.listLocation[position])
+        holder.textLocation.text = list[position]
 
         val view = holder.itemView
         view.setOnClickListener {
@@ -41,11 +46,17 @@ class LocationAdapter(private val list: MutableList<String>):
                         .setTitle("Delete place?")
                         .setMessage("Do you want to delete place?")
                         .setPositiveButton("Yes") { dialog, which ->
-                            MainActivity.timeStampMap.remove(MainActivity.listLocation[position])
+
+                            MainActivity.listTimeStamp.removeAt(position)
                             MainActivity.listLocation.removeAt(position)
                             MainActivity.listAddress.removeAt(position)
-                            MainActivity.mAdapter.notifyDataSetChanged()
-
+                            MainActivity.timeAdapter.notifyDataSetChanged()
+                            if (list.isEmpty()) {
+                                if (TimeAdapter.recyclerLocation != null) {
+                                    TimeAdapter.recyclerLocation!!.removeViewAt(position)
+                                    MainActivity.timeAdapter.notifyItemRemoved(position)
+                                }
+                            }
                             val objectSerializer = ObjectSerializer(view.context)
                             objectSerializer.saveData()
                         }

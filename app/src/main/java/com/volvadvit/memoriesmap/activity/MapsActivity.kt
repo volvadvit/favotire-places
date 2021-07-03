@@ -1,4 +1,4 @@
-package com.volvadvit.memoriesmap
+package com.volvadvit.memoriesmap.activity
 
 
 import android.content.Intent
@@ -18,14 +18,16 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.volvadvit.memoriesmap.common.ObjectSerializer
+import com.volvadvit.memoriesmap.R
+import com.volvadvit.memoriesmap.common.GeoAsyncTask
 import com.volvadvit.memoriesmap.databinding.ActivityMapsBinding
+import java.lang.Exception
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.UnsupportedTemporalTypeException
-import java.util.*
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLongClickListener {
 
@@ -72,17 +74,32 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
     }
 
     override fun onMapLongClick(p0: LatLng) {
-        val areaInfo = getAreaInfo(p0)
-        mMap.addMarker(
-            MarkerOptions()
-                .position(p0)
-                .title(areaInfo)
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
-        )
-        val location = "${p0.latitude}+${p0.longitude}"
-        MainActivity.timeStampMap[location] = getTimeStamp()
+        val task = GeoAsyncTask(this)
+        val areaInfo = try {
+            task.execute(p0).get()
+        } catch (e: Exception) {
+            Log.d("Exception", e.message.toString())
+            null
+        }
+        if (!areaInfo.isNullOrEmpty()){
+            val time = getTimeStamp()
+            val location = "${p0.latitude}+${p0.longitude}"
+            mMap.addMarker(
+                MarkerOptions()
+                    .position(p0)
+                    .title(areaInfo)
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
+            )
 
-        fillMainActivity(location, areaInfo)
+            MainActivity.listLocation.add(location)
+            MainActivity.listAddress.add(areaInfo)
+            MainActivity.listTimeStamp.add(time)
+            runOnUiThread {
+                MainActivity.timeAdapter.notifyDataSetChanged()
+            }
+        } else {
+            Toast.makeText(this, "Something goes wrong...", Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -107,7 +124,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
         if (dataFromExtra != "emptyExtra") {
             val locArray = MainActivity.listLocation[dataFromExtra.toInt()].split("+").toTypedArray()
             val location: LatLng = LatLng(locArray[0].toDouble(), locArray[1].toDouble())
-            Toast.makeText(this, location.toString(), Toast.LENGTH_SHORT).show()
 
             mMap.addMarker(
                 MarkerOptions()
@@ -115,7 +131,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
                     .title(MainActivity.listAddress[dataFromExtra.toInt()])
                     .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
             )
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 15f))
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 18f))
         } else {
             if (MainActivity.checkPermission(applicationContext)) {
                 localManager.requestLocationUpdates(
@@ -135,11 +151,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
         localListener = object : LocationListener {
             override fun onLocationChanged(location: Location) {
                 if (MainActivity.checkPermission(applicationContext)) {
-//                    val lastKnownLocation: Location =
-//                        localManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) ?: return
                     val locationLatLng =
                         LatLng(location.latitude, location.longitude)
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(locationLatLng, 15f))
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(locationLatLng, 18f))
                 }
             }
             override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
@@ -148,46 +162,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
         }
     }
 
-    private fun getAreaInfo(location: LatLng): String {
-        var address = ""
-            val geoCoder = Geocoder(applicationContext, Locale.getDefault())
-            val listAddresses: MutableList<Address> = geoCoder.getFromLocation(
-                location.latitude,
-                location.longitude, 1
-            )
-
-            if (listAddresses.isNotEmpty()) {
-
-                if (!listAddresses[0].thoroughfare.isNullOrEmpty()) {
-                    address = listAddresses[0].thoroughfare + " "
-                }
-                if (!listAddresses[0].subThoroughfare.isNullOrEmpty()) {
-                    address += listAddresses[0].subThoroughfare + " "
-                }
-                if (!listAddresses[0].subLocality.isNullOrEmpty()) {
-                    address += listAddresses[0].subLocality + " "
-                }
-                if (!listAddresses[0].adminArea.isNullOrEmpty()) {
-                    address += listAddresses[0].adminArea + " "
-                }
-            }
-        return address
-    }
-
-    private fun fillMainActivity(location: String, area: String) {
-        MainActivity.listLocation.add(location)
-        MainActivity.listAddress.add(area)
-
-        runOnUiThread{
-            MainActivity.mAdapter.notifyDataSetChanged()
-        }
-    }
-
     private fun getTimeStamp(): String {
         var timeStamp = ""
         try {
             timeStamp = LocalDateTime.now().format(
-                DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss").withZone(
+                DateTimeFormatter.ofPattern("yyyy/MM/dd").withZone(
                     ZoneId.systemDefault()
                 )
             )

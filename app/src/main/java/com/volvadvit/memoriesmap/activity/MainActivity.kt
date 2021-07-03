@@ -1,4 +1,4 @@
-package com.volvadvit.memoriesmap
+package com.volvadvit.memoriesmap.activity
 
 import android.Manifest
 import android.content.Context
@@ -13,6 +13,9 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.volvadvit.memoriesmap.common.ObjectSerializer
+import com.volvadvit.memoriesmap.R
+import com.volvadvit.memoriesmap.adapter.TimeAdapter
 
 import com.volvadvit.memoriesmap.databinding.ActivityMainBinding
 
@@ -31,8 +34,8 @@ class MainActivity : AppCompatActivity() {
 
         internal var listAddress: MutableList<String> = mutableListOf()
         internal var listLocation: MutableList<String> = mutableListOf()
-        internal var timeStampMap = mutableMapOf<String, String>()  // Location to Timestamp
-        internal lateinit var mAdapter: LocationAdapter
+        internal var listTimeStamp: MutableList<String> = mutableListOf()
+        internal lateinit var timeAdapter: TimeAdapter
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,8 +66,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initRecyclerAdapter() {
-        mAdapter = LocationAdapter(listAddress)
-        binding.recyclerView.adapter = mAdapter
+        timeAdapter = TimeAdapter(listTimeStamp.toMutableSet())
+        binding.recyclerTime.adapter = timeAdapter
     }
 
     private fun getUserData() {
