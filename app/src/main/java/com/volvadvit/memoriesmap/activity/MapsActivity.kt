@@ -46,6 +46,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         binding.browseButton.setOnClickListener {
             val intent = Intent(this, WebViewActivity::class.java)
             intent.putExtra("web", markerInfo)
@@ -108,14 +109,24 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        object : AlertDialog.Builder(this){}
-            .setIcon(android.R.drawable.ic_menu_help)
-            .setTitle("Help")
-            .setMessage("Long press on place to save it.\n" +
-                    "You can return on main page, and see all saved places\n" +
-                    "Click on marker and after on the \"Browse\" button, to google place")
-            .setNeutralButton("Close", null)
-            .show()
+        when (item.itemId) {
+            R.id.map_help -> {
+                object : AlertDialog.Builder(this) {}
+                    .setIcon(android.R.drawable.ic_menu_help)
+                    .setTitle("Help")
+                    .setMessage(
+                        "Long press on place to save it.\n" +
+                                "You can return on main page, and see all saved places\n" +
+                                "Click on marker and after on the \"Browse\" button, to google place"
+                    )
+                    .setNeutralButton("Close", null)
+                    .show()
+            }
+
+            android.R.id.home -> {
+                this@MapsActivity.finish()
+            }
+        }
         return super.onOptionsItemSelected(item)
     }
 
